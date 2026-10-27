@@ -4,7 +4,7 @@ Aplicação mínima para testar a integração de um backend Laravel com modelos
 
 O objetivo é de aprendizado: validar o fluxo completo (web → API → modelo de IA → web) com o menor código possível, sem autenticação, sem histórico e sem recursos além do necessário.
 
-> Status: **esqueleto rodando no Docker**. Os projetos Laravel (`apps/api`) e Next.js (`apps/web`) existem e sobem juntos com o banco; a rota `GET /api/health` responde e a web exibe a página inicial padrão. O agente `DataAnalyst` conversa com o Gemini e é exposto por `POST /api/processar-dados`; a tela de análise ainda não existe.
+> Status: **esqueleto rodando no Docker**. Os projetos Laravel (`apps/api`) e Next.js (`apps/web`) existem e sobem juntos com o banco; a rota `GET /api/health` responde. O agente `DataAnalyst` conversa com o Gemini e é exposto por `POST /api/processar-dados`, e a web tem a tela de análise que fecha o ciclo ponta a ponta. Faltam os testes automatizados e o deploy.
 
 ## Stack
 
@@ -47,7 +47,7 @@ AI_MODEL=gemini-3.5-flash-lite
 CORS_ALLOWED_ORIGIN=http://localhost:3002
 ```
 
-O frontend recebe só a URL da API, por meio de `NEXT_PUBLIC_API_URL`. A chave nunca vai para o navegador.
+O frontend recebe só a URL da API, por meio de `NEXT_PUBLIC_API_URL` (injetada pelo `docker-compose.dev.yaml` e documentada em `apps/web/.env.example`). Essa variável é pública, então nunca coloque segredos nela. A chave nunca vai para o navegador.
 
 O modelo é definido por `AI_MODEL`, sem nome fixo no código. Na camada gratuita a disponibilidade e a cota variam por modelo e por dia; se aparecer erro de limite de uso ou de indisponibilidade, espere ou troque o modelo. Depois de editar o `apps/api/.env`, reinicie a API (`docker compose -f docker-compose.dev.yaml restart api`).
 
@@ -103,11 +103,16 @@ docker compose -f docker-compose.dev.yaml exec api php artisan migrate
 ```
 
 - API: <http://localhost:8002/api/health> responde `{"status":"ok"}`.
-- Web: <http://localhost:3002> exibe a página inicial do Next.js.
+- Web: <http://localhost:3002> exibe a tela de análise.
 
 Na primeira subida a API roda `composer install` e a web roda `npm ci`; acompanhe com `docker compose -f docker-compose.dev.yaml logs -f api web`. As migrações são manuais e não rodam sozinhas ao iniciar a API. Se o seu `UID` não for 1000, exporte `UID` e `USER` antes do `up --build` para que os arquivos gerados fiquem com o seu dono.
 
+## Usando a tela de análise
+
+1. Abra <http://localhost:3002>, cole um texto (até 10.000 caracteres) e clique em **Analisar Dados**.
+2. Enquanto a IA responde, o botão fica desabilitado com "Processando com IA...".
+3. A tela mostra o resumo, os pontos principais e os planos de ação; se algo falhar (API fora do ar, cota do provedor, texto inválido), aparece uma mensagem de erro em vez do resultado.
+
 ## Próximos passos
 
-1. Criar a página em `apps/web` e conectá-la à API.
-2. Testes automatizados com o cliente de IA substituído por fake.
+1. Testes automatizados com o cliente de IA substituído por fake.

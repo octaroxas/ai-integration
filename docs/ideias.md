@@ -74,18 +74,20 @@ Ideias:
 
 ---
 
-## 5. Tela de análise no Next.js 🔸
+## 5. Tela de análise no Next.js 🟢
 
 **Problema**: o usuário precisa colar um texto, enviar e ver a resposta, fechando o ciclo ponta a ponta ([princípio II](../.specify/memory/constitution.md)).
 
 Ideias:
 
-- [ ] 🔸 **Página única** com `textarea` e botão "Analisar Dados", em `apps/web`.
-- [ ] 🔸 **URL da API por `NEXT_PUBLIC_API_URL`**, nunca fixa no código (o documento de origem usava `localhost:8000` direto).
-- [ ] 🔸 **Estado de carregamento**: botão desabilitado e texto "Processando com IA..." durante a chamada, evitando envio duplicado.
-- [ ] 🔸 **Exibição do resultado** preservando quebras de linha; avaliar renderizar Markdown se o modelo responder com ele.
-- [ ] 🔸 **Exibição de erro** visível quando a API falha ou fica inacessível (o original só dava `console.error`).
-- [ ] 🔸 **Validação no cliente**: não enviar texto vazio.
+- [x] ✅ **Página única** com `textarea` e botão "Analisar Dados", em `apps/web`.
+- [x] ✅ **URL da API por `NEXT_PUBLIC_API_URL`**, nunca fixa no código (o documento de origem usava `localhost:8000` direto).
+- [x] ✅ **Estado de carregamento**: botão desabilitado e texto "Processando com IA..." durante a chamada, evitando envio duplicado (campo e botão desabilitados, mais um bloqueio contra cliques e Enter repetidos). A espera no cliente tem limite de 60 s.
+- [x] ✅ **Exibição do resultado** (três blocos) preservando quebras de linha; como texto puro, nunca interpretado como HTML. Markdown ficou fora do escopo, porque a API devolve campos estruturados (`resumo`, `pontos_principais`, `planos_de_acao`) e não Markdown.
+- [x] ✅ **Exibição de erro** visível quando a API falha ou fica inacessível (o original só dava `console.error`).
+- [x] ✅ **Validação no cliente**: não enviar texto vazio nem acima de 10.000 caracteres, com contador na tela.
+
+Detalhes em `specs/004-tela-de-analise/`.
 
 **Critério de aceite**: colar um texto, clicar em "Analisar Dados" e ver a análise do Gemini na tela; em caso de falha, ver uma mensagem de erro em vez de nada.
 
