@@ -40,18 +40,18 @@ Ideias:
 
 ---
 
-## 3. Integração com o Gemini na API 🔸
+## 3. Integração com o Gemini na API 🟢
 
 **Problema**: o núcleo do projeto é a comunicação com o modelo de IA. Isso precisa funcionar e ficar isolado antes de existir qualquer tela ou endpoint público ([princípio IV](../.specify/memory/constitution.md)).
 
 Ideias:
 
-- [ ] 🔸 **Instalar e configurar o AI SDK do Laravel 13**, conferindo na documentação oficial do SDK o nome do pacote e o formato da configuração do provedor Gemini.
-- [ ] 🔸 **Chave em `apps/api/.env`** (`GEMINI_API_KEY`), com a entrada vazia no `apps/api/.env.example`; nunca no frontend nem no git ([princípio III](../.specify/memory/constitution.md)).
-- [ ] 🔸 **Modelo configurável por variável de ambiente** (ex.: `AI_MODEL`), sem nome fixo no código. O documento de origem cita Gemini 1.5 Flash, que pode estar defasado: conferir no Google AI Studio qual modelo gratuito está disponível hoje.
-- [ ] 🔸 **Agente `DataAnalyst`** (`App\Ai\Agents\DataAnalyst`) com instruções de sistema: analisar o conteúdo e devolver resumo estruturado e planos de ação.
-- [ ] 🔸 **Validar a chamada isolada** pelo `php artisan tinker` antes de criar o endpoint.
-- [ ] 🔸 **Tratamento de falhas do provedor** (cota, timeout, chave inválida, resposta vazia) convertido em erro claro, sem expor detalhes internos.
+- [x] ✅ **Instalar e configurar o AI SDK do Laravel 13**: pacote `laravel/ai`, só a configuração publicada (`apps/api/config/ai.php`), sem as tabelas de conversas do SDK.
+- [x] ✅ **Chave em `apps/api/.env`** (`GEMINI_API_KEY`), com a entrada vazia no `apps/api/.env.example`; nunca no frontend nem no git ([princípio III](../.specify/memory/constitution.md)).
+- [x] ✅ **Modelo configurável por variável de ambiente** (`AI_MODEL`), sem nome fixo no código. O Gemini 1.5 Flash do documento de origem saiu do ar; o padrão do exemplo é `gemini-3.5-flash-lite`. Na camada gratuita a disponibilidade varia: `gemini-3.8-flash` deu 503, `gemini-2.5-flash` deu 404 pelo SDK e `gemini-3.6-flash` estourou a cota (detalhes em `specs/002-gemini-ai-integration/research.md`).
+- [x] ✅ **Agente `DataAnalyst`** (`App\Ai\Agents\DataAnalyst`) com instruções de sistema e saída estruturada (`resumo`, `pontos_principais`, `planos_de_acao`), chamado por `analisar(string)`.
+- [x] ✅ **Chamada isolada validada** pelo `php artisan tinker`, com o Gemini real.
+- [x] ✅ **Tratamento de falhas do provedor** (cota, timeout, chave inválida, resposta vazia, modelo inválido, chave ausente, entrada vazia) convertido em `AnaliseFalhouException` com mensagem em português, sem expor detalhes internos. Timeout só está coberto pelo mapeamento no código.
 
 **Critério de aceite**: no `tinker`, chamar o agente com um texto devolve a análise do Gemini; com a chave inválida, devolve um erro tratado, não uma exceção crua.
 

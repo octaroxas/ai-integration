@@ -4,7 +4,7 @@ Aplicação mínima para testar a integração de um backend Laravel com modelos
 
 O objetivo é de aprendizado: validar o fluxo completo (web → API → modelo de IA → web) com o menor código possível, sem autenticação, sem histórico e sem recursos além do necessário.
 
-> Status: **esqueleto rodando no Docker**. Os projetos Laravel (`apps/api`) e Next.js (`apps/web`) existem e sobem juntos com o banco; a rota `GET /api/health` responde e a web exibe a página inicial padrão. A integração com a IA ainda não foi feita.
+> Status: **esqueleto rodando no Docker**. Os projetos Laravel (`apps/api`) e Next.js (`apps/web`) existem e sobem juntos com o banco; a rota `GET /api/health` responde e a web exibe a página inicial padrão. O agente `DataAnalyst` conversa com o Gemini e pode ser chamado pelo `tinker`; o endpoint HTTP e a tela de análise ainda não existem.
 
 ## Stack
 
@@ -42,9 +42,25 @@ A chave do Gemini fica apenas no `.env` da API, que não deve ser versionado:
 
 ```env
 GEMINI_API_KEY=sua_chave_do_google_ai_studio
+AI_PROVIDER=gemini
+AI_MODEL=gemini-3.5-flash-lite
 ```
 
 O frontend recebe só a URL da API, por meio de `NEXT_PUBLIC_API_URL`. A chave nunca vai para o navegador.
+
+O modelo é definido por `AI_MODEL`, sem nome fixo no código. Na camada gratuita a disponibilidade e a cota variam por modelo e por dia; se aparecer erro de limite de uso ou de indisponibilidade, espere ou troque o modelo. Depois de editar o `apps/api/.env`, reinicie a API (`docker compose -f docker-compose.dev.yaml restart api`).
+
+Para testar o agente sem endpoint (consome a cota gratuita real):
+
+```bash
+docker compose -f docker-compose.dev.yaml exec api php artisan tinker
+```
+
+```php
+(new \App\Ai\Agents\DataAnalyst)->analisar('Vendas caíram 12% em outubro e o estoque do produto A está parado há 60 dias.');
+```
+
+A resposta é um array com `resumo`, `pontos_principais` e `planos_de_acao`. Falhas do provedor viram `App\Ai\Exceptions\AnaliseFalhouException`, com o tipo em `$e->tipo` e uma mensagem em português.
 
 ## Docker
 
