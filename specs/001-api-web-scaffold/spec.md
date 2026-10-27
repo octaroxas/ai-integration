@@ -8,6 +8,13 @@
 
 **Input**: User description: "Criar os projetos de aplicação do monorepo para que a stack de desenvolvimento em Docker suba de ponta a ponta. Hoje `apps/api` e `apps/web` contêm só a configuração de Docker, sem projeto dentro, então os containers não têm o que executar. Ao final, o desenvolvedor deve conseguir, sem ter PHP, Node ou Postgres instalados na máquina, rodar o `docker compose` de desenvolvimento e obter: (1) uma API Laravel com rotas de API habilitadas, conectada ao banco Postgres do compose, com as migrações rodando no container e uma rota de saúde (`GET /api/health`) que confirma que a API responde; (2) uma aplicação web Next.js (App Router, React 19) exibindo a página inicial padrão, com o arquivo de lock de dependências versionado; (3) arquivos gerados nos volumes montados com o dono do usuário do host, sem erros de permissão em logs, cache ou dependências. Critério de aceite: com a stack no ar, `http://localhost:8002/api/health` responde pela API e `http://localhost:3002` exibe a página inicial do Next.js. Não inclui integração com IA, endpoints de negócio, telas de análise, testes automatizados nem configuração de produção, tratados em itens seguintes."
 
+## Clarifications
+
+### Session 2026-10-27
+
+- Q: As migrações do banco devem rodar automaticamente quando a API inicia, ou o desenvolvedor as executa manualmente? → A: Manualmente, por `php artisan migrate` no container; a API não as roda sozinha.
+- Q: A rota `/api/health` deve confirmar só que a API está de pé, ou também a conexão com o banco? → A: Só a API; a rota não consulta o banco (a conexão é validada pelas migrações).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - API responde dentro do Docker (Priority: P1)
@@ -21,7 +28,7 @@ O desenvolvedor, em uma máquina sem PHP nem Postgres instalados, sobe a stack d
 **Acceptance Scenarios**:
 
 1. **Given** a stack de desenvolvimento no ar, **When** o desenvolvedor faz uma requisição `GET` a `http://localhost:8002/api/health`, **Then** recebe uma resposta de sucesso que indica que a API está funcionando.
-2. **Given** a stack no ar e o banco saudável, **When** o desenvolvedor executa as migrações no container da API, **Then** elas terminam sem erro, provando que a API alcança o banco do compose.
+2. **Given** a stack no ar e o banco saudável, **When** o desenvolvedor executa manualmente as migrações no container da API, **Then** elas terminam sem erro, provando que a API alcança o banco do compose.
 3. **Given** uma máquina sem PHP, Node ou Postgres instalados, **When** o desenvolvedor sobe a stack pela primeira vez, **Then** a API inicia sem que ele precise instalar nada no host além do Docker.
 
 ---
@@ -72,9 +79,9 @@ O desenvolvedor edita e apaga, no host, os arquivos criados pelos containers (c�
 - **FR-001**: O repositório MUST conter um projeto de API em `apps/api` e um projeto web em `apps/web`, de modo que os containers do Compose de desenvolvimento tenham o que executar.
 - **FR-002**: Ambos os projetos MUST poder ser criados e executados usando só o Docker, sem exigir PHP, Node ou Postgres instalados no host.
 - **FR-003**: A API MUST expor rotas de API (prefixo `/api`) habilitadas.
-- **FR-004**: A API MUST responder `GET /api/health` com um status de sucesso que confirme que está funcionando, acessível em `http://localhost:8002/api/health` na configuração padrão.
+- **FR-004**: A API MUST responder `GET /api/health` com um status de sucesso que confirme que a aplicação está no ar, sem consultar o banco, acessível em `http://localhost:8002/api/health` na configuração padrão.
 - **FR-005**: A API MUST conectar-se ao banco do Compose usando valores de exemplo versionados em `apps/api/.env.example`, coerentes com as credenciais do `.env` da raiz.
-- **FR-006**: As migrações do banco MUST executar sem erro dentro do container da API.
+- **FR-006**: As migrações do banco MUST executar sem erro dentro do container da API quando o desenvolvedor as dispara manualmente; a API MUST NOT rodá-las sozinha ao iniciar.
 - **FR-007**: A aplicação web MUST exibir a página inicial padrão em `http://localhost:3002` na configuração padrão.
 - **FR-008**: O arquivo de lock de dependências da web MUST estar versionado, para que instalações sejam reprodutíveis.
 - **FR-009**: Arquivos criados pelos containers nos volumes montados (código, logs, cache, dependências) MUST pertencer ao usuário do host, sem erros de permissão e sem exigir privilégio elevado para editar ou apagar.
@@ -90,7 +97,7 @@ Não se aplica: a feature não introduz entidades de domínio nem dados de negó
 
 ### Measurable Outcomes
 
-- **SC-001**: Um desenvolvedor com apenas o Docker instalado, partindo de um clone novo, consegue ter a stack completa no ar com um único comando e sem passos manuais além de copiar os arquivos de ambiente de exemplo.
+- **SC-001**: Um desenvolvedor com apenas o Docker instalado, partindo de um clone novo, consegue ter a stack completa no ar com um único comando e sem passos manuais além de copiar os arquivos de ambiente de exemplo (as migrações do banco são um passo manual separado e não fazem parte da subida da stack).
 - **SC-002**: `http://localhost:8002/api/health` responde com sucesso em 100% das tentativas depois que a stack termina de subir.
 - **SC-003**: `http://localhost:3002` exibe a página inicial padrão da aplicação web em 100% das tentativas depois que a stack termina de subir.
 - **SC-004**: As migrações rodam no container da API com 0 erros.
@@ -103,7 +110,7 @@ Não se aplica: a feature não introduz entidades de domínio nem dados de negó
 - A pilha tecnológica é a definida na constituição do projeto (Laravel 13 e Next.js com App Router e React 19); a escolha de versões exatas e dos comandos de criação fica para o plano.
 - A estrutura de Docker do item 1 do backlog (`docker-compose.dev.yaml`, `Dockerfile` e scripts de entrada de `apps/api` e `apps/web`) já existe e pode ser ajustada se necessário para esta feature.
 - "Página inicial padrão" significa a página gerada pelo próprio projeto novo, sem conteúdo ou design customizado.
-- O formato exato do corpo da resposta de `/api/health` é detalhe de plano; basta indicar sucesso e que a API está funcionando.
+- O formato exato do corpo da resposta de `/api/health` é detalhe de plano; basta indicar sucesso e que a API está no ar. A rota não verifica o banco; a conexão com ele é validada pelas migrações.
 - O banco é apenas conectado e migrado nesta feature; nenhuma tabela de negócio é criada, apenas as migrações iniciais que acompanham o projeto novo.
 - As pastas `apps/api` e `apps/web` podem ser tratadas como vazias de projeto (só há configuração de Docker); o `package-lock.json` provisório do commit anterior foi removido.
 - Portas padrão (API 8002, web 3002, banco 5436) são as da constituição e podem ser trocadas pelo `.env` da raiz.

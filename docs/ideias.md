@@ -6,7 +6,7 @@
 
 ---
 
-## 1. Fundação do repositório e Docker 🟡
+## 1. Fundação do repositório e Docker 🟢
 
 **Problema**: antes de qualquer código de aplicação, o monorepo precisa de estrutura, Docker e fluxo de trabalho definidos, no mesmo padrão do `doit`.
 
@@ -17,24 +17,24 @@ Ideias:
 - [x] ✅ `Dockerfile` (target `dev`) e `entrypoint.dev.sh` de `apps/api` e `apps/web`, mais `.dockerignore`.
 - [x] ✅ `.env.example` da raiz e `.gitignore`.
 - [x] ✅ Spec Kit instalado e constituição v1.0.0.
-- [ ] 🔸 Subir a stack completa de ponta a ponta (`docker compose -f docker-compose.dev.yaml up --build`) assim que os projetos existirem (item 2). Até lá só a validação de sintaxe e o build das imagens foram feitos.
+- [x] ✅ Subir a stack completa de ponta a ponta (`docker compose -f docker-compose.dev.yaml up --build`), validado com os projetos do item 2.
 
 **Critério de aceite**: `docker compose -f docker-compose.dev.yaml up -d --build` sobe os três serviços sem erro e sem exigir PHP, Node ou Postgres na máquina.
 
 ---
 
-## 2. Criar os projetos Laravel e Next.js 🔸
+## 2. Criar os projetos Laravel e Next.js 🟢
 
 **Problema**: `apps/api` e `apps/web` estão vazios, então os entrypoints do Docker ainda não têm o que instalar.
 
 Ideias:
 
-- [ ] 🔸 **Laravel 13 em `apps/api`**, criado via container (`composer create-project`), sem instalar PHP no host.
-- [ ] 🔸 **Rotas de API**: habilitar `routes/api.php` (no Laravel recente é preciso instalar o scaffold de API, ex.: `php artisan install:api`).
-- [ ] 🔸 **Conexão com o Postgres** no `apps/api/.env.example` (`DB_HOST=db`, credenciais iguais às do `.env` da raiz) e `php artisan migrate` rodando no container.
-- [ ] 🔸 **Next.js em `apps/web`** (App Router, React 19), criado via container, com `package-lock.json` versionado.
-- [ ] 🔸 Conferir permissões dos bind mounts (`Permission Denied` em logs e cache) com `UID`/`USER` do host.
-- [ ] 🔸 Rota de saúde simples na API (ex.: `GET /api/health`) para confirmar que a stack responde.
+- [x] ✅ **Laravel 13 em `apps/api`**, criado via container (`composer create-project`), sem instalar PHP no host.
+- [x] ✅ **Rotas de API**: `routes/api.php` registrado em `bootstrap/app.php`, sem `php artisan install:api` para não trazer o Sanctum (autenticação não é usada).
+- [x] ✅ **Conexão com o Postgres** no `apps/api/.env.example` (`DB_HOST=db`, credenciais iguais às do `.env` da raiz) e `php artisan migrate` rodando no container (manual).
+- [x] ✅ **Next.js em `apps/web`** (App Router, React 19), criado via container, com `package-lock.json` versionado.
+- [x] ✅ Permissões dos bind mounts conferidas com `UID`/`USER` do host. As pastas `apps/web/node_modules` e `apps/web/.next` precisam existir antes do primeiro `up` (ver README), senão o Docker as cria como root.
+- [x] ✅ Rota de saúde simples na API (`GET /api/health`) para confirmar que a stack responde.
 
 **Critério de aceite**: `http://localhost:8002/api/health` responde pela API e `http://localhost:3002` exibe a página inicial do Next.js, ambos dentro do Docker.
 

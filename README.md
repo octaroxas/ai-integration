@@ -4,7 +4,7 @@ Aplicação mínima para testar a integração de um backend Laravel com modelos
 
 O objetivo é de aprendizado: validar o fluxo completo (web → API → modelo de IA → web) com o menor código possível, sem autenticação, sem histórico e sem recursos além do necessário.
 
-> Status: **somente documentação**. Nenhum código foi criado ainda; este README descreve o escopo e a estrutura planejada.
+> Status: **esqueleto rodando no Docker**. Os projetos Laravel (`apps/api`) e Next.js (`apps/web`) existem e sobem juntos com o banco; a rota `GET /api/health` responde e a web exibe a página inicial padrão. A integração com a IA ainda não foi feita.
 
 ## Stack
 
@@ -64,10 +64,25 @@ Pontos de atenção em ambiente compartilhado (VPS):
 - **Proxy reverso:** em produção, o Nginx do servidor recebe o tráfego dos domínios e repassa para as portas dos containers.
 - **Permissões de volume:** as pastas `apps/api` e `apps/web` precisam permitir escrita pelo usuário do container, para evitar `Permission Denied` em logs e caches.
 
+## Rodando em desenvolvimento
+
+Só Docker e Docker Compose são necessários (sem PHP, Node ou Postgres no host).
+
+```bash
+cp .env.example .env
+mkdir -p apps/web/node_modules apps/web/.next   # evita que o Docker crie essas pastas como root
+docker compose -f docker-compose.dev.yaml up -d --build
+docker compose -f docker-compose.dev.yaml exec api php artisan migrate
+```
+
+- API: <http://localhost:8002/api/health> responde `{"status":"ok"}`.
+- Web: <http://localhost:3002> exibe a página inicial do Next.js.
+
+Na primeira subida a API roda `composer install` e a web roda `npm ci`; acompanhe com `docker compose -f docker-compose.dev.yaml logs -f api web`. As migrações são manuais e não rodam sozinhas ao iniciar a API. Se o seu `UID` não for 1000, exporte `UID` e `USER` antes do `up --build` para que os arquivos gerados fiquem com o seu dono.
+
 ## Próximos passos
 
-1. Criar `docker-compose.dev.yaml` e os `Dockerfile` de `apps/api` e `apps/web`.
-2. Instalar o Laravel 13 em `apps/api` e configurar o AI SDK com o Gemini.
-3. Criar o agente `DataAnalyst` e o endpoint `POST /api/processar-dados`.
-4. Criar a página em `apps/web` e conectá-la à API.
-5. Configurar CORS na API para a origem do frontend.
+1. Instalar e configurar o AI SDK com o Gemini na API.
+2. Criar o agente `DataAnalyst` e o endpoint `POST /api/processar-dados`.
+3. Criar a página em `apps/web` e conectá-la à API.
+4. Configurar CORS na API para a origem do frontend.
