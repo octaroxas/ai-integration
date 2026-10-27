@@ -87,6 +87,8 @@ Ideias:
 - [x] ✅ **Exibição de erro** visível quando a API falha ou fica inacessível (o original só dava `console.error`).
 - [x] ✅ **Validação no cliente**: não enviar texto vazio nem acima de 10.000 caracteres, com contador na tela.
 
+- [x] ✅ **Estilização com Tailwind CSS 4** (pedida pelo dono do projeto), no lugar dos CSS Modules do template, mantendo comportamento e textos; contraste, 320 px, foco e instalação limpa no Docker verificados (`specs/005-estilizacao-tailwind/`).
+
 Detalhes em `specs/004-tela-de-analise/`.
 
 **Critério de aceite**: colar um texto, clicar em "Analisar Dados" e ver a análise do Gemini na tela; em caso de falha, ver uma mensagem de erro em vez de nada.

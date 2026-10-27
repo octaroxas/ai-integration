@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState, type FormEvent } from "react";
-import styles from "./page.module.css";
 import {
   analisarTexto,
   ErroDeAnalise,
@@ -54,13 +53,13 @@ export default function Analisador() {
 
   return (
     <>
-      <form className={styles.form} onSubmit={enviar}>
-        <label htmlFor="texto" className={styles.rotulo}>
+      <form className="flex flex-col gap-2" onSubmit={enviar}>
+        <label htmlFor="texto" className="font-semibold">
           Texto para analisar
         </label>
         <textarea
           id="texto"
-          className={styles.campo}
+          className="w-full resize-y rounded-lg border border-zinc-300 bg-transparent p-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-60 dark:border-zinc-700 dark:focus-visible:outline-blue-400"
           rows={10}
           value={texto}
           disabled={carregando}
@@ -70,17 +69,21 @@ export default function Analisador() {
             setErro(null);
           }}
         />
-        <div className={styles.rodape}>
+        <div className="flex items-center justify-between gap-4">
           <span
             id="contador"
-            className={acimaDoLimite ? styles.contadorExcedido : styles.contador}
+            className={
+              acimaDoLimite
+                ? "text-sm font-semibold text-red-700 dark:text-red-400"
+                : "text-sm text-zinc-600 dark:text-zinc-400"
+            }
           >
             {formatarNumero.format(tamanho)} /{" "}
             {formatarNumero.format(LIMITE_CARACTERES)}
           </span>
           <button
             type="submit"
-            className={styles.botao}
+            className="cursor-pointer rounded-lg bg-blue-600 px-5 py-2.5 font-semibold text-white hover:enabled:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-60 dark:focus-visible:outline-blue-400"
             disabled={carregando}
             aria-busy={carregando}
           >
@@ -90,29 +93,38 @@ export default function Analisador() {
       </form>
 
       {erro && (
-        <div role="alert" className={styles.erro}>
+        <div
+          role="alert"
+          className="mt-4 rounded-lg border border-red-600 bg-red-50 px-4 py-3 text-red-700 dark:border-red-500 dark:bg-red-950 dark:text-red-300"
+        >
           {erro}
         </div>
       )}
 
       {analise && (
-        <section className={styles.resultado} aria-label="Resultado da análise">
-          <h2>Resumo</h2>
-          <p className={styles.textoPreservado}>{analise.resumo}</p>
+        <section className="mt-6" aria-label="Resultado da análise">
+          <h2 className="mb-2 mt-5 text-lg font-semibold">Resumo</h2>
+          <p className="whitespace-pre-wrap wrap-anywhere">{analise.resumo}</p>
 
-          <h2>Pontos principais</h2>
-          <ul>
+          <h2 className="mb-2 mt-5 text-lg font-semibold">Pontos principais</h2>
+          <ul className="list-disc pl-6">
             {analise.pontos_principais.map((ponto, indice) => (
-              <li key={indice} className={styles.textoPreservado}>
+              <li
+                key={indice}
+                className="whitespace-pre-wrap wrap-anywhere [&:not(:first-child)]:mt-1.5"
+              >
                 {ponto}
               </li>
             ))}
           </ul>
 
-          <h2>Planos de ação</h2>
-          <ul>
+          <h2 className="mb-2 mt-5 text-lg font-semibold">Planos de ação</h2>
+          <ul className="list-disc pl-6">
             {analise.planos_de_acao.map((plano, indice) => (
-              <li key={indice} className={styles.textoPreservado}>
+              <li
+                key={indice}
+                className="whitespace-pre-wrap wrap-anywhere [&:not(:first-child)]:mt-1.5"
+              >
                 {plano}
               </li>
             ))}

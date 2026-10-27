@@ -11,7 +11,7 @@ O objetivo é de aprendizado: validar o fluxo completo (web → API → modelo d
 | Camada | Tecnologia |
 |---|---|
 | API | Laravel 13 com o AI SDK nativo |
-| Web | Next.js (App Router, React 19) |
+| Web | Next.js (App Router, React 19) com Tailwind CSS 4 |
 | Banco de dados | PostgreSQL 16 (preparado para `pgvector`, caso surjam buscas semânticas) |
 | Modelo de IA | Google Gemini, via API Key gratuita do [Google AI Studio](https://aistudio.google.com/) |
 | Infraestrutura | Docker e Docker Compose |
@@ -112,6 +112,18 @@ Na primeira subida a API roda `composer install` e a web roda `npm ci`; acompanh
 1. Abra <http://localhost:3002>, cole um texto (até 10.000 caracteres) e clique em **Analisar Dados**.
 2. Enquanto a IA responde, o botão fica desabilitado com "Processando com IA...".
 3. A tela mostra o resumo, os pontos principais e os planos de ação; se algo falhar (API fora do ar, cota do provedor, texto inválido), aparece uma mensagem de erro em vez do resultado.
+
+## Estilização da web
+
+A web usa o Tailwind CSS 4 (pacotes `tailwindcss` e `@tailwindcss/postcss`, com `apps/web/postcss.config.mjs`; não há `tailwind.config`). O estilo fica nas classes utilitárias dos componentes, e o único CSS próprio, `apps/web/app/globals.css`, importa o Tailwind e define o tema claro e escuro (segue a preferência do sistema). Escreva sempre as classes por inteiro: o Tailwind só gera as que encontra no código.
+
+Dependências novas da web devem ser instaladas dentro do container, para o `package-lock.json` sair correto para o Alpine:
+
+```bash
+docker compose -f docker-compose.dev.yaml exec web npm install -D <pacote>
+```
+
+Se, depois de mexer na configuração de estilo, aparecer estilo antigo, recrie o volume de cache da web (`docker compose -f docker-compose.dev.yaml down`, depois `docker volume rm ai-test-dev_web_next` e `up -d`).
 
 ## Próximos passos
 
