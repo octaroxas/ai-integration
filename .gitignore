@@ -1,0 +1,28 @@
+# Variáveis de ambiente (os .env.example continuam versionados)
+.env
+.env.*
+!.env.example
+
+# API (Laravel)
+apps/api/vendor/
+apps/api/node_modules/
+apps/api/public/hot
+apps/api/public/build
+apps/api/public/storage
+apps/api/storage/*.key
+apps/api/storage/logs/
+apps/api/.phpunit.cache/
+apps/api/.phpunit.result.cache
+
+# Web (Next.js)
+apps/web/node_modules/
+apps/web/.next/
+apps/web/out/
+apps/web/*.tsbuildinfo
+apps/web/next-env.d.ts
+npm-debug.log*
+
+# Editor / sistema
+.idea/
+.vscode/
+.DS_Store
