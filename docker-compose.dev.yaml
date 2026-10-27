@@ -1,0 +1,95 @@
+# Stack de desenvolvimento local no mesmo padrão do doit: Postgres, API Laravel
+# (`php artisan serve`) e web Next.js (apps/web), com containers/rede de sufixo -dev e portas
+# do host configuráveis pelo .env da raiz. Os defaults (8002, 5436, 3002) não colidem com o
+# doit (8001, 5435, 3001) nem com o Hidro Vision (8000, 5434) rodando na mesma máquina.
+# A GEMINI_API_KEY fica só em apps/api/.env (nunca no frontend).
+name: ai-test-dev
+
+x-api-env: &api-env
+  APP_ENV: local
+  DB_HOST: db
+  DB_PORT: 5432
+  DB_DATABASE: ${DB_DATABASE:-ai_test}
+  DB_USERNAME: ${DB_USERNAME:-ai_test}
+  DB_PASSWORD: ${DB_PASSWORD:-ai_test}
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: ai-test-db-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-ai_test}
+      POSTGRES_USER: ${DB_USERNAME:-ai_test}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-ai_test}
+    ports:
+      - "${DB_PORT:-5436}:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - ai-test-dev
+
+  # API Laravel: http://localhost:${APP_PORT:-8002}
+  # Comandos: `docker compose -f docker-compose.dev.yaml exec api php artisan migrate`
+  api:
+    build:
+      context: ./apps/api
+      target: dev
+      args:
+        user: ${USER:-laravel}
+        uid: ${UID:-1000}
+    image: ai-test-api-dev:latest
+    container_name: ai-test-api-dev
+    restart: unless-stopped
+    command: ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000", "--no-reload"]
+    ports:
+      - "${APP_PORT:-8002}:8000"
+    volumes:
+      - ./apps/api:/var/www/html
+    environment: *api-env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - ai-test-dev
+
+  # Web (Next.js): http://localhost:${WEB_PORT:-3002}. O navegador chama a API pelo endereço
+  # público do host (NEXT_PUBLIC_API_URL); node_modules e .next ficam em volumes nomeados.
+  web:
+    build:
+      context: ./apps/web
+      target: dev
+      args:
+        user: ${USER:-node-dev}
+        uid: ${UID:-1000}
+    image: ai-test-web-dev:latest
+    container_name: ai-test-web-dev
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-3002}:3000"
+    volumes:
+      - ./apps/web:/app
+      - web_node_modules:/app/node_modules
+      - web_next:/app/.next
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:${APP_PORT:-8002}
+      NEXT_TELEMETRY_DISABLED: "1"
+    depends_on:
+      api:
+        condition: service_started
+    networks:
+      - ai-test-dev
+
+networks:
+  ai-test-dev:
+    driver: bridge
+
+volumes:
+  db_data:
+  web_node_modules:
+  web_next:

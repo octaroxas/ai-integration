@@ -52,9 +52,11 @@ Três serviços:
 
 | Serviço | Origem | Porta padrão do host |
 |---|---|---|
-| `postgres` | `postgres:16-alpine` | 5432 |
-| `api` | `apps/api` | 8000 |
-| `web` | `apps/web` | 3000 |
+| `db` | `postgres:16-alpine` | 5436 |
+| `api` | `apps/api` | 8002 |
+| `web` | `apps/web` | 3002 |
+
+Os defaults evitam colidir com o `doit` (8001, 5435, 3001) rodando na mesma máquina e são configuráveis no `.env` da raiz (`APP_PORT`, `DB_PORT`, `WEB_PORT`).
 
 Pontos de atenção em ambiente compartilhado (VPS):
 
