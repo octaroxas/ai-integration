@@ -57,18 +57,18 @@ Ideias:
 
 ---
 
-## 4. Endpoint `POST /api/processar-dados` 🔸
+## 4. Endpoint `POST /api/processar-dados` 🟢
 
 **Problema**: a web precisa de um contrato HTTP simples para enviar o texto e receber a análise.
 
 Ideias:
 
-- [ ] 🔸 **Rota `POST /api/processar-dados`** recebendo `{ "conteudo": "..." }` e respondendo `{ "sucesso": true, "analise": "..." }`.
-- [ ] 🔸 **Validação** via Form Request: `conteudo` obrigatório, string e com tamanho máximo (definir o limite na spec, para proteger a cota).
-- [ ] 🔸 **Controller fino** que só chama o agente do item 3; nenhuma chamada ao provedor dentro da rota ([princípio IV](../.specify/memory/constitution.md)).
-- [ ] 🔸 **Respostas de erro** consistentes (422 para validação, 5xx/502 para falha do provedor) com `sucesso: false` e uma mensagem em português.
-- [ ] 🔸 **CORS** liberando só a origem do frontend (`http://localhost:3002` em dev).
-- [ ] 🔸 Documentar o contrato (request, response, erros) em `docs/` ou na spec da feature.
+- [x] ✅ **Rota `POST /api/processar-dados`** recebendo `{ "conteudo": "..." }` e respondendo `{ "sucesso": true, "analise": {...} }`, em que `analise` é o objeto estruturado do agente (`resumo`, `pontos_principais`, `planos_de_acao`), não um texto único.
+- [x] ✅ **Validação** via Form Request: `conteudo` obrigatório, string e com no máximo 10.000 caracteres, para proteger a cota.
+- [x] ✅ **Controller fino** que só chama o agente do item 3; nenhuma chamada ao provedor dentro da rota ([princípio IV](../.specify/memory/constitution.md)).
+- [x] ✅ **Respostas de erro** consistentes (422 para validação, 502/503 para falha do provedor, 500 para erro inesperado; 404/405 também no envelope e sem rastro) com `sucesso: false` e uma mensagem em português.
+- [x] ✅ **CORS** liberando só a origem do frontend (`http://localhost:3002` em dev), configurada por `CORS_ALLOWED_ORIGIN`.
+- [x] ✅ Documentar o contrato (request, response, erros) em `specs/003-processar-dados-endpoint/contracts/processar-dados.md`.
 
 **Critério de aceite**: um `curl` para `/api/processar-dados` com texto válido devolve a análise; sem `conteudo`, devolve 422; com o provedor indisponível, devolve erro claro.
 

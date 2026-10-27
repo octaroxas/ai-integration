@@ -4,7 +4,7 @@ Aplicação mínima para testar a integração de um backend Laravel com modelos
 
 O objetivo é de aprendizado: validar o fluxo completo (web → API → modelo de IA → web) com o menor código possível, sem autenticação, sem histórico e sem recursos além do necessário.
 
-> Status: **esqueleto rodando no Docker**. Os projetos Laravel (`apps/api`) e Next.js (`apps/web`) existem e sobem juntos com o banco; a rota `GET /api/health` responde e a web exibe a página inicial padrão. O agente `DataAnalyst` conversa com o Gemini e pode ser chamado pelo `tinker`; o endpoint HTTP e a tela de análise ainda não existem.
+> Status: **esqueleto rodando no Docker**. Os projetos Laravel (`apps/api`) e Next.js (`apps/web`) existem e sobem juntos com o banco; a rota `GET /api/health` responde e a web exibe a página inicial padrão. O agente `DataAnalyst` conversa com o Gemini e é exposto por `POST /api/processar-dados`; a tela de análise ainda não existe.
 
 ## Stack
 
@@ -33,7 +33,7 @@ docker-compose.yaml        stack de produção
 1. A página web exibe um `textarea` e um botão **Analisar Dados**.
 2. Ao enviar, o frontend faz `POST /api/processar-dados` com `{ "conteudo": "..." }`.
 3. A API valida o payload e repassa o texto a um agente (`App\Ai\Agents\DataAnalyst`) do Laravel AI SDK, configurado para o Gemini.
-4. O modelo devolve um resumo estruturado e planos de ação, e a API responde `{ "sucesso": true, "analise": "..." }`.
+4. O modelo devolve um resumo estruturado e planos de ação, e a API responde `{ "sucesso": true, "analise": { "resumo": "...", "pontos_principais": [...], "planos_de_acao": [...] } }`.
 5. O frontend exibe o resultado abaixo do formulário.
 
 ## Configuração
@@ -44,6 +44,7 @@ A chave do Gemini fica apenas no `.env` da API, que não deve ser versionado:
 GEMINI_API_KEY=sua_chave_do_google_ai_studio
 AI_PROVIDER=gemini
 AI_MODEL=gemini-3.5-flash-lite
+CORS_ALLOWED_ORIGIN=http://localhost:3002
 ```
 
 O frontend recebe só a URL da API, por meio de `NEXT_PUBLIC_API_URL`. A chave nunca vai para o navegador.
@@ -61,6 +62,16 @@ docker compose -f docker-compose.dev.yaml exec api php artisan tinker
 ```
 
 A resposta é um array com `resumo`, `pontos_principais` e `planos_de_acao`. Falhas do provedor viram `App\Ai\Exceptions\AnaliseFalhouException`, com o tipo em `$e->tipo` e uma mensagem em português.
+
+## Endpoint `POST /api/processar-dados`
+
+```bash
+curl -s -X POST http://localhost:8002/api/processar-dados \
+  -H 'Content-Type: application/json' -H 'Accept: application/json' \
+  -d '{"conteudo":"Vendas caíram 12% em outubro e o estoque do produto A está parado há 60 dias."}'
+```
+
+`conteudo` é obrigatório, texto, com até 10.000 caracteres. Sucesso devolve 200 com `sucesso: true` e `analise`; erros devolvem `sucesso: false` e `mensagem` em português (422 validação, 502/503 falha do provedor, 500 inesperado). O CORS libera só a origem de `CORS_ALLOWED_ORIGIN`. Contrato completo: [specs/003-processar-dados-endpoint/contracts/processar-dados.md](specs/003-processar-dados-endpoint/contracts/processar-dados.md).
 
 ## Docker
 
@@ -98,7 +109,5 @@ Na primeira subida a API roda `composer install` e a web roda `npm ci`; acompanh
 
 ## Próximos passos
 
-1. Instalar e configurar o AI SDK com o Gemini na API.
-2. Criar o agente `DataAnalyst` e o endpoint `POST /api/processar-dados`.
-3. Criar a página em `apps/web` e conectá-la à API.
-4. Configurar CORS na API para a origem do frontend.
+1. Criar a página em `apps/web` e conectá-la à API.
+2. Testes automatizados com o cliente de IA substituído por fake.
